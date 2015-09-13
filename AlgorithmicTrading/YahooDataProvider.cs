@@ -14,12 +14,17 @@ namespace AlgorithmicTrading
         public static IObservable<Quote> LiveFeed(params string[] symbols) =>
             new YahooDataProvider().NewLiveFeed(symbols);
 
-        IObservable<Quote> NewLiveFeed(params string[] symbols) => Observable
-            .Interval(TimeSpan.FromSeconds(1))
-            .Select(x => new QuoteService().Quote(symbols))
-            .Select(x => ParametersToReturn(x))
-            .SelectMany(x => x)
-            .Select<dynamic, Quote>(x => ParseQuote(x));
+        IObservable<Quote> NewLiveFeed(params string[] symbols)
+        {
+            if(symbols.Any(x => string.IsNullOrWhiteSpace(x))) throw new ArgumentNullException(nameof(symbols));
+
+            return Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Select(x => new QuoteService().Quote(symbols))
+                .Select(x => ParametersToReturn(x))
+                .SelectMany(x => x)
+                .Select<dynamic, Quote>(x => ParseQuote(x));
+        }
 
         Quote ParseQuote(dynamic x) => new Quote
         {
