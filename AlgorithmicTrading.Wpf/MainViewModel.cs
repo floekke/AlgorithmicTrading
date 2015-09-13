@@ -27,24 +27,18 @@ namespace AlgorithmicTrading.Wpf
 
         public MainViewModel()
         {
-            this.WhenAnyValue(x => x.SymbolTextBox)
-                .Throttle(TimeSpan.FromSeconds(1))
-                .Where(x => string.IsNullOrEmpty(x) == false)
+            var quotes = from symbol in this.WhenAnyValue(x => x.SymbolTextBox)
+                         where !string.IsNullOrEmpty(symbol)
+                         from quote in YahooDataProvider.LiveFeed(symbol)  // TODO: should we do a join instead?
+                         where quote != null
+                         select quote;
+
+            var newSeries = new XyDataSeries<DateTime, double> { SeriesName = "Data" };
+            ChartSeries.Add(new ChartSeriesViewModel(newSeries, new FastLineRenderableSeries { SeriesColor = Color.FromRgb(11, 29, 63) }));
+
+            quotes.SubscribeOn(RxApp.TaskpoolScheduler)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x =>
-                {
-                    var newSeries = new XyDataSeries<DateTime, double> { SeriesName = x };
-                    ChartSeries.Add(new ChartSeriesViewModel(newSeries, new FastLineRenderableSeries { SeriesColor = Color.FromRgb(11, 29, 63) }));
-
-                    YahooDataProvider.LiveFeed(x)
-                    .SubscribeOn(RxApp.TaskpoolScheduler)
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .Subscribe(q =>
-                    {
-                        newSeries.Append(DateTime.Now, q.Ask);
-                    });
-                });
-
+                .Subscribe(quote => newSeries.Append(DateTime.Now, quote.Ask));
         }
 
         public ObservableCollection<IChartSeriesViewModel> ChartSeries { get; set; } = new ObservableCollection<IChartSeriesViewModel>();
