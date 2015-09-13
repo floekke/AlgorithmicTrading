@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AlgorithmicTrading.Wpf"
-        xmlns:oxy="http://oxyplot.org/wpf"
+        xmlns:s="http://schemas.abtsoftware.co.uk/scichart"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Window.DataContext>
@@ -17,8 +17,15 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
             <TextBox Text="{Binding Path=SymbolTextBox, UpdateSourceTrigger=PropertyChanged}"/>
-            <Button Content="Subscribe" Command="{Binding Path=SubscribeToSymbolCommmand}"  />
         </StackPanel>
-        <oxy:PlotView Grid.Row="1" Model="{Binding Plot}" />
+        <s:SciChartSurface Grid.Row="1"  SeriesSource="{Binding ChartSeries}">
+            <s:SciChartSurface.XAxis>
+                <s:DateTimeAxis AutoRange="Always" x:Name="XAxis"/>
+            </s:SciChartSurface.XAxis>
+            <s:SciChartSurface.YAxis>
+                <s:NumericAxis AutoRange="Always" AxisAlignment="Left"/>
+            </s:SciChartSurface.YAxis>
+        </s:SciChartSurface>
+
     </Grid>
 </Window>

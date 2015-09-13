@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Reactive;
+using System.Linq;
 using System.Reactive.Linq;
-using OxyPlot;
-using OxyPlot.Series;
 using ReactiveUI;
+using System.Collections.ObjectModel;
+using Abt.Controls.SciChart;
+using Abt.Controls.SciChart.Model.DataSeries;
+using Abt.Controls.SciChart.Visuals.RenderableSeries;
+using System.Windows.Media;
 
 namespace AlgorithmicTrading.Wpf
 {
     public class MainViewModel : ReactiveObject
     {
-        public ReactiveCommand<YahooDataProvider.Quote> SubscribeToSymbolCommmand { get; private set; }
-
-        public PlotModel Plot { get; private set; }
-
         string symbolTextBox;
         public string SymbolTextBox
         {
@@ -20,32 +19,37 @@ namespace AlgorithmicTrading.Wpf
             set { this.RaiseAndSetIfChanged(ref symbolTextBox, value); }
         }
 
+        readonly ObservableAsPropertyHelper<IObservable<YahooDataProvider.Quote>> ticks;
+        public IObservable<YahooDataProvider.Quote> Ticks
+        {
+            get { return ticks.Value; }
+        }
 
         public MainViewModel()
         {
-            ExamplePlot();
-
-            var canSubscribeToSymbol = this.WhenAny(vm => vm.SymbolTextBox,
-                   s => 
-                   !string.IsNullOrWhiteSpace(s.Value));
-
-            SubscribeToSymbolCommmand =
-            ReactiveCommand.CreateAsyncObservable(canSubscribeToSymbol, x => YahooDataProvider.LiveFeed((string)x));
-
-            SubscribeToSymbolCommmand
+            this.WhenAnyValue(x => x.SymbolTextBox)
+                .Throttle(TimeSpan.FromSeconds(1))
+                .Where(x => string.IsNullOrEmpty(x) == false)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>
                 {
-                    Console.WriteLine(x);
+                    var newSeries = new XyDataSeries<DateTime, double> { SeriesName = x };
+                    ChartSeries.Add(new ChartSeriesViewModel(newSeries, new FastLineRenderableSeries { SeriesColor = Color.FromRgb(11, 29, 63) }));
+
+                    YahooDataProvider.LiveFeed(x)
+                    .SubscribeOn(RxApp.TaskpoolScheduler)
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Subscribe(q =>
+                    {
+                        newSeries.Append(DateTime.Now, q.Ask);
+                    });
                 });
+
         }
 
-        private void ExamplePlot()
-        {
-            Plot = new PlotModel { Title = "Example 1" };
-            Plot.Series.Add(new FunctionSeries(Math.Cos, 0, 10, 0.1, "cos(x)"));
-        }
+        public ObservableCollection<IChartSeriesViewModel> ChartSeries { get; set; } = new ObservableCollection<IChartSeriesViewModel>();
 
-
-
+        // Sci chart uses this!
+        public int FontSize { get; set; } = 14;
     }
 }
