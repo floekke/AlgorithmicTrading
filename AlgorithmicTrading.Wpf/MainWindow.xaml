@@ -1,0 +1,24 @@
+﻿<Window x:Class="AlgorithmicTrading.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AlgorithmicTrading.Wpf"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <Window.DataContext>
+        <local:MainViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0">
+            <TextBox Text="{Binding Path=SymbolTextBox, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Content="Subscribe" Command="{Binding Path=SubscribeToSymbolCommmand}"  />
+        </StackPanel>
+        <oxy:PlotView Grid.Row="1" Model="{Binding Plot}" />
+    </Grid>
+</Window>
