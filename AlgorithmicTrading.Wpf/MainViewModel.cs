@@ -37,7 +37,7 @@ namespace AlgorithmicTrading.Wpf
 
         public MainViewModel()
         {
-            //XVisibleRange = new IndexRange();
+            XVisibleRange = new IndexRange(0, 100);
 
             var quotes = from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(3))
                          where !string.IsNullOrEmpty(symbol)
@@ -48,6 +48,8 @@ namespace AlgorithmicTrading.Wpf
             
 
             var series = new XyDataSeries<DateTime, double>();
+            series.SeriesName = "aapl";
+            
             ChartSeries.Add(new ChartSeriesViewModel(series, new FastLineRenderableSeries()));
 
             quotes.SubscribeOn(RxApp.TaskpoolScheduler)
@@ -56,14 +58,14 @@ namespace AlgorithmicTrading.Wpf
                 .Subscribe(quote =>
                 {
 
-                    if (XVisibleRange != null && XVisibleRange.Max > series.Count)
+                    if (XVisibleRange != null && series.Count > XVisibleRange.Max)
                     {
                         var existingRange = xVisibleRange;
                         var newRange = new IndexRange(existingRange.Min + 1, existingRange.Max + 1);
                         XVisibleRange = newRange;
                     }
 
-                    series.Append(DateTime.Now, quote.Ask + random.Next(1, 5));
+                    series.Append(DateTime.Now, quote.Ask);
                 });
 
         }

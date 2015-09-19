@@ -29,22 +29,22 @@
                     <Setter Property="GrowBy" Value="0, 0.1"/>
                 </Style>
             </s:SciStockChart.XAxisStyle>
-            <s:SciStockChart.YAxisStyle>
-                <Style TargetType="s:NumericAxis">
-                    <Setter Property="AutoRange" Value="Always"/>
-                </Style>
-            </s:SciStockChart.YAxisStyle>
+            <s:SciStockChart.YAxis>
+                <s:NumericAxis AutoRange="Never" VisibleRange="100,150" />
+            </s:SciStockChart.YAxis>
 
+            <s:SciChartSurface.ChartModifier>
+                <s:ModifierGroup>
+                    <s:LegendModifier x:Name="legendModifier" ShowLegend="True" Orientation="Horizontal" Margin="10"/>
+                    <s:SeriesSelectionModifier>
+                        <!--<s:SeriesSelectionModifier.SelectedSeriesStyle>
+                            <Style TargetType="SciChart:BaseRenderableSeries">
+                                <Setter Property="StrokeThickness" Value="3"/>
+                            </Style>
+                        </s:SeriesSelectionModifier.SelectedSeriesStyle>-->
+                    </s:SeriesSelectionModifier>
+                </s:ModifierGroup>
+            </s:SciChartSurface.ChartModifier>
         </s:SciStockChart>
-
-        <!--<s:SciChartSurface Grid.Row="1"  SeriesSource="{Binding ChartSeries}">
-            <s:SciChartSurface.XAxis>
-                <s:DateTimeAxis x:Name="XAxis"/>
-            </s:SciChartSurface.XAxis>
-            <s:SciChartSurface.YAxis>
-                <s:NumericAxis AutoRange="Always" AxisAlignment="Left"/>
-            </s:SciChartSurface.YAxis>
-        </s:SciChartSurface>-->
-
     </Grid>
 </Window>
