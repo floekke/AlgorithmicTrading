@@ -7,9 +7,12 @@ using Abt.Controls.SciChart;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Abt.Controls.SciChart.Visuals.RenderableSeries;
 using System.Windows.Media;
+using Abt.Controls.SciChart.Visuals.Axes;
 
 namespace AlgorithmicTrading.Wpf
 {
+    // TODO: remove scíchart license from file
+
     public class MainViewModel : ReactiveObject
     {
         string symbolTextBox;
@@ -19,31 +22,53 @@ namespace AlgorithmicTrading.Wpf
             set { this.RaiseAndSetIfChanged(ref symbolTextBox, value); }
         }
 
-        readonly ObservableAsPropertyHelper<IObservable<YahooDataProvider.Quote>> ticks;
-        public IObservable<YahooDataProvider.Quote> Ticks
+        IndexRange xVisibleRange;
+        public IndexRange XVisibleRange
         {
-            get { return ticks.Value; }
+            get { return xVisibleRange; }
+            set
+            {
+                if (Equals(xVisibleRange, value)) return;
+                this.RaiseAndSetIfChanged(ref xVisibleRange, value);
+            }
         }
+
+        Random random = new Random();
 
         public MainViewModel()
         {
-            var quotes = from symbol in this.WhenAnyValue(x => x.SymbolTextBox)
+            //XVisibleRange = new IndexRange();
+
+            var quotes = from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(3))
                          where !string.IsNullOrEmpty(symbol)
                          from quote in YahooDataProvider.LiveFeed(symbol)  // TODO: should we do a join instead?
                          where quote != null
                          select quote;
 
-            var newSeries = new XyDataSeries<DateTime, double> { SeriesName = "Data" };
-            ChartSeries.Add(new ChartSeriesViewModel(newSeries, new FastLineRenderableSeries { SeriesColor = Color.FromRgb(11, 29, 63) }));
+            
+
+            var series = new XyDataSeries<DateTime, double>();
+            ChartSeries.Add(new ChartSeriesViewModel(series, new FastLineRenderableSeries()));
 
             quotes.SubscribeOn(RxApp.TaskpoolScheduler)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(quote => newSeries.Append(DateTime.Now, quote.Ask));
+                .Do(Console.WriteLine)
+                .Subscribe(quote =>
+                {
+
+                    if (XVisibleRange != null && XVisibleRange.Max > series.Count)
+                    {
+                        var existingRange = xVisibleRange;
+                        var newRange = new IndexRange(existingRange.Min + 1, existingRange.Max + 1);
+                        XVisibleRange = newRange;
+                    }
+
+                    series.Append(DateTime.Now, quote.Ask + random.Next(1, 5));
+                });
+
         }
 
         public ObservableCollection<IChartSeriesViewModel> ChartSeries { get; set; } = new ObservableCollection<IChartSeriesViewModel>();
 
-        // Sci chart uses this!
-        public int FontSize { get; set; } = 14;
     }
 }

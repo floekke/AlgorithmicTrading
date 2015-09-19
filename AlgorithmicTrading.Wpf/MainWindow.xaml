@@ -18,14 +18,33 @@
         <StackPanel Grid.Row="0">
             <TextBox Text="{Binding Path=SymbolTextBox, UpdateSourceTrigger=PropertyChanged}"/>
         </StackPanel>
-        <s:SciChartSurface Grid.Row="1"  SeriesSource="{Binding ChartSeries}">
+
+        <s:SciStockChart x:Name="PriceChart" Grid.Row="1" SeriesSource="{Binding ChartSeries}"   >
+            <s:SciStockChart.XAxisStyle>
+                <Style TargetType="s:CategoryDateTimeAxis">
+                    <Setter Property="DrawMinorGridLines" Value="False"/>
+                    <Setter Property="DrawMajorBands" Value="True"/>
+                    <Setter Property="VisibleRange" Value="{Binding XVisibleRange, Mode=TwoWay}"/>
+                    <Setter Property="DrawMinorGridLines" Value="False"/>
+                    <Setter Property="GrowBy" Value="0, 0.1"/>
+                </Style>
+            </s:SciStockChart.XAxisStyle>
+            <s:SciStockChart.YAxisStyle>
+                <Style TargetType="s:NumericAxis">
+                    <Setter Property="AutoRange" Value="Always"/>
+                </Style>
+            </s:SciStockChart.YAxisStyle>
+
+        </s:SciStockChart>
+
+        <!--<s:SciChartSurface Grid.Row="1"  SeriesSource="{Binding ChartSeries}">
             <s:SciChartSurface.XAxis>
-                <s:DateTimeAxis AutoRange="Always" x:Name="XAxis"/>
+                <s:DateTimeAxis x:Name="XAxis"/>
             </s:SciChartSurface.XAxis>
             <s:SciChartSurface.YAxis>
                 <s:NumericAxis AutoRange="Always" AxisAlignment="Left"/>
             </s:SciChartSurface.YAxis>
-        </s:SciChartSurface>
+        </s:SciChartSurface>-->
 
     </Grid>
 </Window>
