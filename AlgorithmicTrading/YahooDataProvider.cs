@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using YSQ.core.Historical;
@@ -20,17 +21,15 @@ namespace AlgorithmicTrading
         {
             return Observable.Create<HistoricalQuote>(observer =>
             {
-                // TODO: webexception
-
                 new HistoricalPriceService()
                 .Get(symbol, start, end, (YSQ.core.Historical.Period)period)
                 .Reverse()
                 .Select(x => new HistoricalQuote { Date = x.Date, Price = (float)x.Price, Symbol = symbol })
                 .ToList()
                 .ForEach(x => observer.OnNext(x));
-
                 return Disposable.Empty;
             })
+            .Catch((WebException e) =>  Observable.Empty<HistoricalQuote>())
             .Publish()
             .RefCount();
         }

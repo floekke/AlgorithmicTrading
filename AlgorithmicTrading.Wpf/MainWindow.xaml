@@ -16,7 +16,9 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
-            <TextBox Text="{Binding Path=SymbolTextBox, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox Text="{Binding Path=SymbolTextBox}"/>
+            <DatePicker Text="{Binding Path=Start, Mode=TwoWay}"/>
+            <DatePicker Text="{Binding Path=End, Mode=TwoWay}"/>
         </StackPanel>
 
         <s:SciStockChart x:Name="PriceChart" Grid.Row="1" SeriesSource="{Binding ChartSeries}"   >
