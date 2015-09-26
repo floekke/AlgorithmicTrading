@@ -10,22 +10,22 @@ namespace AlgorithmicTrading
 {
     public class YahooDataProvider
     {
-        public static IObservable<Quote> Live(params string[] symbols) =>
+        public static IObservable<LiveQuote> Live(params string[] symbols) =>
             new YahooDataProvider().NewLive(symbols);
 
-        public static IObservable<Historical> Historic(string symbol, DateTime start, DateTime end, Period period) =>
+        public static IObservable<HistoricalQuote> Historic(string symbol, DateTime start, DateTime end, Period period) =>
             new YahooDataProvider().NewHistoric(symbol, start, end, period);
 
-        IObservable<Historical> NewHistoric(string symbol, DateTime start, DateTime end, Period period)
+        IObservable<HistoricalQuote> NewHistoric(string symbol, DateTime start, DateTime end, Period period)
         {
-            return Observable.Create<Historical>(observer =>
+            return Observable.Create<HistoricalQuote>(observer =>
             {
                 // TODO: webexception
 
                 new HistoricalPriceService()
                 .Get(symbol, start, end, (YSQ.core.Historical.Period)period)
                 .Reverse()
-                .Select(x => new Historical { Date = x.Date, Price = (double)x.Price, Symbol = symbol })
+                .Select(x => new HistoricalQuote { Date = x.Date, Price = (float)x.Price, Symbol = symbol })
                 .ToList()
                 .ForEach(x => observer.OnNext(x));
 
@@ -35,7 +35,7 @@ namespace AlgorithmicTrading
             .RefCount();
         }
 
-        IObservable<Quote> NewLive(params string[] symbols)
+        IObservable<LiveQuote> NewLive(params string[] symbols)
         {
             if (symbols.Any(x => string.IsNullOrWhiteSpace(x))) throw new ArgumentNullException(nameof(symbols));
 
@@ -44,16 +44,16 @@ namespace AlgorithmicTrading
                 .Select(x => new QuoteService().Quote(symbols))
                 .Select(x => ParametersToReturn(x))
                 .SelectMany(x => x)
-                .Select<dynamic, Quote>(x => TryParseQuote(x))
+                .Select<dynamic, LiveQuote>(x => TryParseQuote(x))
                 .Where(x => x != null)
                 .Retry();
         }
 
-        Quote TryParseQuote(dynamic x)
+        LiveQuote TryParseQuote(dynamic x)
         {
             try
             {
-                return new Quote
+                return new LiveQuote
                 {
                     Symbol = ((string)x.Symbol).TrimEnd('"').TrimStart('"'),
                     Volume = long.Parse(x.Volume),
@@ -82,17 +82,20 @@ namespace AlgorithmicTrading
             Monthly = 2
         }
 
+        public abstract class Quote
+        {
+        }
 
-        public class Historical
+        public class HistoricalQuote : Quote
         {
             public string Symbol;
-            public double Price;
+            public float Price;
             public DateTime Date;
 
             public override string ToString() => $"Symbol {Symbol} Price {Price} Date {Date}";
         }
 
-        public class Quote
+        public class LiveQuote : Quote
         {
             public string Symbol;
             public float Ask;

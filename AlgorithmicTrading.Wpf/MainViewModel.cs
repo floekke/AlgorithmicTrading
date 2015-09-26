@@ -63,7 +63,7 @@ namespace AlgorithmicTrading.Wpf
                 });
         }
 
-        void SetVisibleRanges(YahooDataProvider.Historical quote, XyDataSeries<DateTime, double> series)
+        void SetVisibleRanges(YahooDataProvider.HistoricalQuote quote, XyDataSeries<DateTime, double> series)
         {
             if (XVisibleRange != null && series.Count > XVisibleRange.Max)
             {
@@ -81,7 +81,7 @@ namespace AlgorithmicTrading.Wpf
             }
         }
 
-        XyDataSeries<DateTime, double> AppendToSeries(YahooDataProvider.Historical quote, Dictionary<string, XyDataSeries<DateTime, double>> seriesDic)
+        XyDataSeries<DateTime, double> AppendToSeries(YahooDataProvider.HistoricalQuote quote, Dictionary<string, XyDataSeries<DateTime, double>> seriesDic)
         {
             XyDataSeries<DateTime, double> series;
 
