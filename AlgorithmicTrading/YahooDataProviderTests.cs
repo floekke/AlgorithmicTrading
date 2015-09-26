@@ -12,7 +12,7 @@ namespace AlgorithmicTrading
         public async void ShouldGetLiveFeedFromYahoo()
         {
             var result = await YahooDataProvider
-                .LiveFeed("aapl", "MSFT")
+                .Live("aapl", "MSFT")
                 .Do(Console.WriteLine)
                 .Take(1);
 

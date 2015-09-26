@@ -30,18 +30,18 @@
                 </Style>
             </s:SciStockChart.XAxisStyle>
             <s:SciStockChart.YAxis>
-                <s:NumericAxis AutoRange="Never" VisibleRange="100,150" />
+                <s:NumericAxis VisibleRange="{Binding YVisibleRange, Mode=TwoWay}" />
             </s:SciStockChart.YAxis>
 
             <s:SciChartSurface.ChartModifier>
                 <s:ModifierGroup>
-                    <s:LegendModifier x:Name="legendModifier" ShowLegend="True" Orientation="Horizontal" Margin="10"/>
+                    <s:LegendModifier x:Name="legendModifier" ShowLegend="True" Orientation="Horizontal" Margin="10" />
                     <s:SeriesSelectionModifier>
-                        <!--<s:SeriesSelectionModifier.SelectedSeriesStyle>
-                            <Style TargetType="SciChart:BaseRenderableSeries">
+                        <s:SeriesSelectionModifier.SelectedSeriesStyle>
+                            <Style TargetType="s:BaseRenderableSeries">
                                 <Setter Property="StrokeThickness" Value="3"/>
                             </Style>
-                        </s:SeriesSelectionModifier.SelectedSeriesStyle>-->
+                        </s:SeriesSelectionModifier.SelectedSeriesStyle>
                     </s:SeriesSelectionModifier>
                 </s:ModifierGroup>
             </s:SciChartSurface.ChartModifier>

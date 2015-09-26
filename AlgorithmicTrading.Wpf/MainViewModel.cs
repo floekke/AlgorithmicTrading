@@ -34,46 +34,65 @@ namespace AlgorithmicTrading.Wpf
             }
         }
 
-        Random random = new Random();
+        DoubleRange yVisibleRange;
+        public DoubleRange YVisibleRange
+        {
+            get { return yVisibleRange; }
+            set
+            {
+                if (Equals(yVisibleRange, value)) return;
+                this.RaiseAndSetIfChanged(ref yVisibleRange, value);
+            }
+        }
 
         public MainViewModel()
         {
-            XVisibleRange = new IndexRange(0, 100);
+            //    XVisibleRange = new IndexRange(0, 100);
 
             var quotes = from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(1))
                          where !string.IsNullOrEmpty(symbol)
-                         from quote in YahooDataProvider.LiveFeed(symbol)  // TODO: should we do a join instead?
+                         from quote in YahooDataProvider.Historic(symbol: symbol, start: DateTime.Now.AddDays(-30), end: DateTime.Now, period: YahooDataProvider.Period.Daily)  // TODO: should we do a join instead?
                          where quote != null
-                         select new { Quote = quote, Symbol = symbol };
+                         select quote;
 
             var seriesDic = new Dictionary<string, XyDataSeries<DateTime, double>>();
 
             quotes.SubscribeOn(RxApp.TaskpoolScheduler)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Do(Console.WriteLine)
-                .Subscribe(quoteAndSymbol =>
+                .Subscribe(quote =>
                 {
                     XyDataSeries<DateTime, double> series;
 
-                    if (seriesDic.ContainsKey(quoteAndSymbol.Symbol))
+                    if (seriesDic.ContainsKey(quote.Symbol))
                     {
-                        series = seriesDic[quoteAndSymbol.Symbol];
+                        series = seriesDic[quote.Symbol];
                     }
                     else
                     {
                         series = new XyDataSeries<DateTime, double>();
-                        series.SeriesName = quoteAndSymbol.Symbol;
+                        series.SeriesName = quote.Symbol;
                         ChartSeries.Add(new ChartSeriesViewModel(series, new FastLineRenderableSeries()));
-                        seriesDic[quoteAndSymbol.Symbol] = series;
+                        seriesDic[quote.Symbol] = series;
                     }
 
-                    series.Append(DateTime.Now, quoteAndSymbol.Quote.Ask);
+                    //series.AcceptsUnsortedData = true;  // do we need this, why aren't it sorted?
+
+                    series.Append(quote.Date, quote.Price);
 
                     if (XVisibleRange != null && series.Count > XVisibleRange.Max)
                     {
-                        var existingRange = xVisibleRange;
-                        var newRange = new IndexRange(existingRange.Min + 1, existingRange.Max + 1);
-                        XVisibleRange = newRange;
+                        XVisibleRange = new IndexRange(XVisibleRange.Min + 1, XVisibleRange.Max + 1);
+                    }
+
+                    if (YVisibleRange != null && quote.Price > YVisibleRange.Max)
+                    {
+                        YVisibleRange = new DoubleRange(YVisibleRange.Min, quote.Price + 10);
+                    }
+
+                    if (YVisibleRange != null && quote.Price < YVisibleRange.Min)
+                    {
+                        YVisibleRange = new DoubleRange(quote.Price - 10, YVisibleRange.Max);
                     }
 
                 });
