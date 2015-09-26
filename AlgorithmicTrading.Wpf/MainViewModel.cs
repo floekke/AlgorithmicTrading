@@ -6,16 +6,14 @@ using System.Collections.ObjectModel;
 using Abt.Controls.SciChart;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Abt.Controls.SciChart.Visuals.RenderableSeries;
-using System.Windows.Media;
-using Abt.Controls.SciChart.Visuals.Axes;
 using System.Collections.Generic;
 
 namespace AlgorithmicTrading.Wpf
 {
-    // TODO: remove scíchart license from file
-
     public class MainViewModel : ReactiveObject
     {
+        public ObservableCollection<IChartSeriesViewModel> ChartSeries { get; set; } = new ObservableCollection<IChartSeriesViewModel>();
+
         string symbolTextBox;
         public string SymbolTextBox
         {
@@ -47,8 +45,6 @@ namespace AlgorithmicTrading.Wpf
 
         public MainViewModel()
         {
-            //    XVisibleRange = new IndexRange(0, 100);
-
             var quotes = from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(1))
                          where !string.IsNullOrEmpty(symbol)
                          from quote in YahooDataProvider.Historic(symbol: symbol, start: DateTime.Now.AddDays(-30), end: DateTime.Now, period: YahooDataProvider.Period.Daily)  // TODO: should we do a join instead?
@@ -62,44 +58,47 @@ namespace AlgorithmicTrading.Wpf
                 .Do(Console.WriteLine)
                 .Subscribe(quote =>
                 {
-                    XyDataSeries<DateTime, double> series;
-
-                    if (seriesDic.ContainsKey(quote.Symbol))
-                    {
-                        series = seriesDic[quote.Symbol];
-                    }
-                    else
-                    {
-                        series = new XyDataSeries<DateTime, double>();
-                        series.SeriesName = quote.Symbol;
-                        ChartSeries.Add(new ChartSeriesViewModel(series, new FastLineRenderableSeries()));
-                        seriesDic[quote.Symbol] = series;
-                    }
-
-                    //series.AcceptsUnsortedData = true;  // do we need this, why aren't it sorted?
-
-                    series.Append(quote.Date, quote.Price);
-
-                    if (XVisibleRange != null && series.Count > XVisibleRange.Max)
-                    {
-                        XVisibleRange = new IndexRange(XVisibleRange.Min + 1, XVisibleRange.Max + 1);
-                    }
-
-                    if (YVisibleRange != null && quote.Price > YVisibleRange.Max)
-                    {
-                        YVisibleRange = new DoubleRange(YVisibleRange.Min, quote.Price + 10);
-                    }
-
-                    if (YVisibleRange != null && quote.Price < YVisibleRange.Min)
-                    {
-                        YVisibleRange = new DoubleRange(quote.Price - 10, YVisibleRange.Max);
-                    }
-
+                    var series = AppendToSeries(quote, seriesDic);
+                    SetVisibleRanges(quote, series);
                 });
-
         }
 
-        public ObservableCollection<IChartSeriesViewModel> ChartSeries { get; set; } = new ObservableCollection<IChartSeriesViewModel>();
+        void SetVisibleRanges(YahooDataProvider.Historical quote, XyDataSeries<DateTime, double> series)
+        {
+            if (XVisibleRange != null && series.Count > XVisibleRange.Max)
+            {
+                XVisibleRange = new IndexRange(XVisibleRange.Min + 1, XVisibleRange.Max + 1);
+            }
 
+            if (YVisibleRange != null && quote.Price > YVisibleRange.Max)
+            {
+                YVisibleRange = new DoubleRange(YVisibleRange.Min, quote.Price + 10);
+            }
+
+            if (YVisibleRange != null && quote.Price < YVisibleRange.Min)
+            {
+                YVisibleRange = new DoubleRange(quote.Price - 10, YVisibleRange.Max);
+            }
+        }
+
+        XyDataSeries<DateTime, double> AppendToSeries(YahooDataProvider.Historical quote, Dictionary<string, XyDataSeries<DateTime, double>> seriesDic)
+        {
+            XyDataSeries<DateTime, double> series;
+
+            if (seriesDic.ContainsKey(quote.Symbol))
+            {
+                series = seriesDic[quote.Symbol];
+            }
+            else
+            {
+                series = new XyDataSeries<DateTime, double>();
+                series.SeriesName = quote.Symbol;
+                ChartSeries.Add(new ChartSeriesViewModel(series, new FastLineRenderableSeries()));
+                seriesDic[quote.Symbol] = series;
+            }
+
+            series.Append(quote.Date, quote.Price);
+            return series;
+        }
     }
 }
