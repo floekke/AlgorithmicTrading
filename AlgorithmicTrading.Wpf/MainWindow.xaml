@@ -15,8 +15,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition />
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0">
-            <TextBox Text="{Binding Path=SymbolTextBox}"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" >
+            <TextBox MinWidth="400" Text="{Binding Path=SymbolTextBox}"/>
             <DatePicker Text="{Binding Path=Start, Mode=TwoWay}"/>
             <DatePicker Text="{Binding Path=End, Mode=TwoWay}"/>
         </StackPanel>
@@ -25,7 +25,7 @@
             <s:SciStockChart.XAxisStyle>
                 <Style TargetType="s:CategoryDateTimeAxis">
                     <Setter Property="DrawMinorGridLines" Value="False"/>
-                    <Setter Property="DrawMajorBands" Value="True"/>
+                    <Setter Property="DrawMajorBands" Value="False"/>
                     <Setter Property="VisibleRange" Value="{Binding XVisibleRange, Mode=TwoWay}"/>
                     <Setter Property="DrawMinorGridLines" Value="False"/>
                     <Setter Property="GrowBy" Value="0, 0.1"/>

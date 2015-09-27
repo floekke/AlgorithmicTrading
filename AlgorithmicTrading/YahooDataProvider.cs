@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reactive.Disposables;
@@ -19,6 +20,10 @@ namespace AlgorithmicTrading
 
         IObservable<HistoricalQuote> NewHistoric(string symbol, DateTime start, DateTime end, Period period)
         {
+            if (start > end) throw new ArgumentException("start > end");
+
+            Debug.WriteLine($"{nameof(NewHistoric)} symbol {symbol} start {start} end {end} period {period}");
+
             return Observable.Create<HistoricalQuote>(observer =>
             {
                 new HistoricalPriceService()
@@ -29,9 +34,15 @@ namespace AlgorithmicTrading
                 .ForEach(x => observer.OnNext(x));
                 return Disposable.Empty;
             })
-            .Catch((WebException e) =>  Observable.Empty<HistoricalQuote>())
+            .Catch((WebException e) =>
+            {
+                Debug.WriteLine(e);
+                return Observable.Empty<HistoricalQuote>();
+            })
+            .Retry(3)
             .Publish()
-            .RefCount();
+            .RefCount()
+            .Do(x => Debug.WriteLine(x));
         }
 
         IObservable<LiveQuote> NewLive(params string[] symbols)
@@ -98,7 +109,7 @@ namespace AlgorithmicTrading
             {
                 get; set;
             }
-                
+
             public override string ToString() => $"Symbol {Symbol} Price {Price} Date {Date}";
         }
 

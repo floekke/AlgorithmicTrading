@@ -7,7 +7,6 @@ using Abt.Controls.SciChart;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Abt.Controls.SciChart.Visuals.RenderableSeries;
 using System.Collections.Generic;
-using AlgorithmicTrading;
 
 namespace AlgorithmicTrading.Wpf
 {
@@ -78,37 +77,49 @@ namespace AlgorithmicTrading.Wpf
                              // TODO: produce smaller intervals from long interval! Datetime vs. timespan
                          select new { Symbol = symbol, Start = start, End = end });
 
-            input
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x =>
-                ChartSeries.Clear());
+            input.ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x => ChartSeries.Clear()); // TODO: throw chart away!
 
-            // Maybe use combine latest!
-            var quotes = from i in input
-                         from quote in YahooDataProvider.Historic(symbol: i.Symbol, start: i.Start, end: i.End, period: YahooDataProvider.Period.Daily).SubscribeOn(RxApp.TaskpoolScheduler) // 
-                         where quote != null
-                         select quote;
+            var delay = Observable.Empty<YahooDataProvider.HistoricalQuote>().Delay(TimeSpan.FromMilliseconds(100));
 
-            var movingAvg = quotes
+            var quotesDelayed = input
+                .DistinctUntilChanged()
+                .Select(i => YahooDataProvider.Historic(i.Symbol, i.Start, i.End, YahooDataProvider.Period.Daily))
+                .SelectMany(x => x)
+                .SubscribeOn(RxApp.TaskpoolScheduler)
+                .Select(x => Observable.Return(x).Concat(delay))
+                .Concat();
+
+            var movingAvg50 = quotesDelayed
                 .Select(x => x.Price)
-                .MovingAverage(10);
-                        
-            var quotesAndAvgs = movingAvg
-                 .Skip(9)
-                 .Zip(quotes, (avg, q) => new[] {
-                     new YahooDataProvider.HistoricalQuote { Date = q.Date , Price = avg, Symbol = $"MvgAvg(10)-{q.Symbol}" },
+                .MovingAverage(50);
+
+            //var movingAvg200 = quotesDelayed
+            //    .Select(x => x.Price)
+            //    .MovingAverage(200);
+
+            var quotesAndAvgs50 = movingAvg50
+                 .Skip(49)
+                 .Zip(quotesDelayed, (avg, q) => new[] {
+                     new YahooDataProvider.HistoricalQuote { Date = q.Date , Price = avg, Symbol = $"MvgAvg(50)-{q.Symbol}" },
                      q})
                  .SelectMany(x => x);
 
-            SubscribeAndPlotQuotes(quotesAndAvgs);
+            //var quotesAndAvgs200 = movingAvg200
+            //     .Skip(199)
+            //     .Zip(quotesDelayed, (avg, q) => new[] {
+            //         new YahooDataProvider.HistoricalQuote { Date = q.Date , Price = avg, Symbol = $"MvgAvg(200)-{q.Symbol}" },
+            //         q})
+            //     .SelectMany(x => x);
+
+            SubscribeAndPlotQuotes(quotesAndAvgs50);
         }
 
         void SubscribeAndPlotQuotes(IObservable<YahooDataProvider.HistoricalQuote> quotes)
         {
             var seriesDic = new Dictionary<string, XyDataSeries<DateTime, double>>();
 
-            quotes
-                .SubscribeOn(RxApp.TaskpoolScheduler)
+            quotes.SubscribeOn(RxApp.TaskpoolScheduler)
                 .Do(Console.WriteLine)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(quote =>
@@ -122,7 +133,7 @@ namespace AlgorithmicTrading.Wpf
         {
             if (XVisibleRange != null && series.Count > XVisibleRange.Max)
             {
-                XVisibleRange = new IndexRange(XVisibleRange.Min + 1, XVisibleRange.Max + 1);
+                XVisibleRange = new IndexRange(XVisibleRange.Min, XVisibleRange.Max + 1);
             }
 
             if (YVisibleRange != null && quote.Price > YVisibleRange.Max)
