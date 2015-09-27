@@ -11,7 +11,7 @@ namespace AlgorithmicTrading
         {
             return prices
                 .Buffer(days, 1)
-                .Do(Console.WriteLine)
+                .Where(x => x.Count == days)
                 .Select(x => x.Average());
         }
     }
