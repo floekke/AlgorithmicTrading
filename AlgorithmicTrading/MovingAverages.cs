@@ -7,7 +7,7 @@ namespace AlgorithmicTrading
     public static class MovingAverages
     {
         // TODO: better name for days?
-        public static IObservable<float> MovingAverage(int days, IObservable<float> prices)
+        public static IObservable<float> MovingAverage(this IObservable<float> prices, int days)
         {
             return prices
                 .Buffer(days, 1)

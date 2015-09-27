@@ -7,6 +7,7 @@ using Abt.Controls.SciChart;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Abt.Controls.SciChart.Visuals.RenderableSeries;
 using System.Collections.Generic;
+using AlgorithmicTrading;
 
 namespace AlgorithmicTrading.Wpf
 {
@@ -67,7 +68,7 @@ namespace AlgorithmicTrading.Wpf
 
         public MainViewModel()
         {
-            Start = DateTime.Now.AddYears(-1); 
+            Start = DateTime.Now.AddYears(-1);
             End = DateTime.Now;
 
             var input = (from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(1))
@@ -79,7 +80,7 @@ namespace AlgorithmicTrading.Wpf
 
             input
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x => 
+                .Subscribe(x =>
                 ChartSeries.Clear());
 
             // Maybe use combine latest!
@@ -88,6 +89,22 @@ namespace AlgorithmicTrading.Wpf
                          where quote != null
                          select quote;
 
+            var movingAvg = quotes
+                .Select(x => x.Price)
+                .MovingAverage(10);
+                        
+            var quotesAndAvgs = movingAvg
+                 .Skip(9)
+                 .Zip(quotes, (avg, q) => new[] {
+                     new YahooDataProvider.HistoricalQuote { Date = q.Date , Price = avg, Symbol = $"MvgAvg(10)-{q.Symbol}" },
+                     q})
+                 .SelectMany(x => x);
+
+            SubscribeAndPlotQuotes(quotesAndAvgs);
+        }
+
+        void SubscribeAndPlotQuotes(IObservable<YahooDataProvider.HistoricalQuote> quotes)
+        {
             var seriesDic = new Dictionary<string, XyDataSeries<DateTime, double>>();
 
             quotes

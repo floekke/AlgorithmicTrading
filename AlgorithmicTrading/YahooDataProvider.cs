@@ -83,14 +83,22 @@ namespace AlgorithmicTrading
 
         public abstract class Quote
         {
+            public abstract float Price
+            {
+                get; set;
+            }
         }
 
         public class HistoricalQuote : Quote
         {
             public string Symbol;
-            public float Price;
             public DateTime Date;
 
+            public override float Price
+            {
+                get; set;
+            }
+                
             public override string ToString() => $"Symbol {Symbol} Price {Price} Date {Date}";
         }
 
@@ -103,6 +111,19 @@ namespace AlgorithmicTrading
             public long Volume;
             public DateTimeOffset LatestTradeTime;
             public float LatestTradePrice;
+
+            public override float Price
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+
+                set
+                {
+                    throw new NotImplementedException();
+                }
+            }
 
             public override string ToString() =>
                 $"Symbol {Symbol} Ask {Ask} Bid {Bid} Open {Open} Volume {Volume} LatestTradeTime {LatestTradeTime} LatestTradePrice {LatestTradePrice}";

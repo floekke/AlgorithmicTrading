@@ -1,12 +1,28 @@
 ﻿using NUnit.Framework;
+using System.Linq;
 using System.Reactive.Linq;
-using static AlgorithmicTrading.MovingAverages;
 
 namespace AlgorithmicTrading
 {
     [TestFixture]
     public class MovingAveragesTests
     {
+        [Test]
+        public void ShouldNotProduceAverage()
+        {
+            var prices = new[] { 1F }.ToObservable();
+            var result = prices.MovingAverage(10);
+            Assert.AreEqual(0, result.ToEnumerable().Count());
+        }
+
+        [Test]
+        public void ShouldProduceOneAverage()
+        {
+            var prices = new[] { 1F, 2F, 3F }.ToObservable();
+            var result = prices.MovingAverage(3);
+            Assert.AreEqual(1, result.ToEnumerable().Count());
+        }
+
         [Test]
         public void ShouldBeLastNumber()
         {
@@ -27,7 +43,7 @@ namespace AlgorithmicTrading
 
         void AssertLastAvg(int days, float[] prices, float lastAvg)
         {
-            Assert.AreEqual(lastAvg, MovingAverage(days, prices.ToObservable()).Wait());
+            Assert.AreEqual(lastAvg, prices.ToObservable().MovingAverage(days).Wait());
         }
     }
 }
