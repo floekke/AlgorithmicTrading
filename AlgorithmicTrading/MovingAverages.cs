@@ -11,6 +11,7 @@ namespace AlgorithmicTrading
         {
             return prices
                 .Buffer(days, 1)
+                .Do(Console.WriteLine)
                 .Select(x => x.Average());
         }
     }

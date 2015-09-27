@@ -67,15 +67,15 @@ namespace AlgorithmicTrading.Wpf
 
         public MainViewModel()
         {
-            Start = DateTime.Now.AddYears(-10); 
+            Start = DateTime.Now.AddYears(-1); 
             End = DateTime.Now;
 
-            var input = from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(1))
-                        where !string.IsNullOrEmpty(symbol)
-                        from start in this.WhenAnyValue(x => x.Start)
-                        from end in this.WhenAnyValue(x => x.End)
-                        // TODO: produce smaller intervals from long interval! Datetime vs. timespan
-                        select new { Symbol = symbol, Start = start, End = end };
+            var input = (from symbol in this.WhenAnyValue(x => x.SymbolTextBox).Throttle(TimeSpan.FromSeconds(1))
+                         where !string.IsNullOrEmpty(symbol)
+                         from start in this.WhenAnyValue(x => x.Start)
+                         from end in this.WhenAnyValue(x => x.End)
+                             // TODO: produce smaller intervals from long interval! Datetime vs. timespan
+                         select new { Symbol = symbol, Start = start, End = end });
 
             input
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -84,7 +84,7 @@ namespace AlgorithmicTrading.Wpf
 
             // Maybe use combine latest!
             var quotes = from i in input
-                         from quote in YahooDataProvider.Historic(symbol: i.Symbol, start: i.Start, end: i.End, period: YahooDataProvider.Period.Daily)  // 
+                         from quote in YahooDataProvider.Historic(symbol: i.Symbol, start: i.Start, end: i.End, period: YahooDataProvider.Period.Daily).SubscribeOn(RxApp.TaskpoolScheduler) // 
                          where quote != null
                          select quote;
 

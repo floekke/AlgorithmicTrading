@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Reactive.Linq;
+using static AlgorithmicTrading.MovingAverages;
 
 namespace AlgorithmicTrading
 {
@@ -7,11 +8,20 @@ namespace AlgorithmicTrading
     public class MovingAveragesTests
     {
         [Test]
-        public void ShouldFoo()
+        public void ShouldBeLastNumber()
         {
-            var prices = new[] { 1F, 2F }.ToObservable();
-            var result = MovingAverages.MovingAverage(1, prices).Wait();
-            Assert.AreEqual((1F + 2F) / 2, result);
+            AssertLastAvg(days: 1, prices: new[] { 1F, 2F }, lastAvg: 2F / 1);
+        }
+
+        [Test]
+        public void ShouldFoo2()
+        {
+            AssertLastAvg(days: 2, prices: new[] { 1F, 2F, 3F }, lastAvg: (2F + 3F) / 2);
+        }
+
+        void AssertLastAvg(int days, float[] prices, float lastAvg)
+        {
+            Assert.AreEqual(lastAvg, MovingAverage(days, prices.ToObservable()).Wait());
         }
     }
 }
