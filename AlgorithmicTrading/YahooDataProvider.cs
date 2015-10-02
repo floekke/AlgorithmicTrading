@@ -34,12 +34,12 @@ namespace AlgorithmicTrading
                 .ForEach(x => observer.OnNext(x));
                 return Disposable.Empty;
             })
-            .Retry(3)
-            .Catch((WebException e) =>
-            {
-                Debug.WriteLine(e);
-                return Observable.Empty<HistoricalQuote>();
-            })
+            //.Retry(3)
+            //.Catch((WebException e) =>
+            //{
+            //    Debug.WriteLine(e);
+            //    return Observable.Empty<HistoricalQuote>();
+            //})
             .Publish()
             .RefCount()
             .Do(x => Debug.WriteLine(x));
