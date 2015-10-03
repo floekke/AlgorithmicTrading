@@ -1,5 +1,4 @@
-﻿using Microsoft.FSharp.Core;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Linq;
 using System.Reactive.Linq;
